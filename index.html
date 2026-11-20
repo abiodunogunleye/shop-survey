@@ -368,7 +368,7 @@
       var missing = missingContact();
       if (missing.length) {
         missing.forEach(function (key) { $("f_" + key).setAttribute("aria-invalid", "true"); });
-        showError("To get a call or the summary, add your name, shop name and phone number. Or untick both boxes to stay anonymous.");
+        showError("To get a call or the summary, add your name and WhatsApp or phone number. Or untick both boxes to stay anonymous.");
         $("f_" + missing[0]).focus();
         $("errorText").scrollIntoView({ block: "center" });
         return;
@@ -475,7 +475,7 @@
   }
 
   // Name, shop and phone are needed only when the owner asks to be contacted
-  var REQUIRED_WHEN_CONTACT = ["name", "shop", "phone"];
+  var REQUIRED_WHEN_CONTACT = ["name", "phone"];
 
   function wantsContact() { return !!(contact.okToCall || contact.wantsSummary); }
 
@@ -506,8 +506,8 @@
 
     var fields = [
       { key: "name", label: "Your name", type: "text", auto: "name" },
+      { key: "phone", label: "WhatsApp or phone number", type: "tel", auto: "tel" },
       { key: "shop", label: "Shop name", type: "text", auto: "organization" },
-      { key: "phone", label: "Phone or WhatsApp", type: "tel", auto: "tel" },
       { key: "town", label: "Town or city", type: "text", auto: "address-level2" }
     ];
     fields.forEach(function (f) {
