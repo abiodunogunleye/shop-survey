@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>African Food Shop Survey</title>
+<meta name="description" content="14 quick questions about running an African food shop in the UK. About 3 minutes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<!-- =========================================================
+     SETTINGS: paste your n8n production webhook URL and your
+     email below. While it says PASTE_..., the page runs in
+     preview mode and nothing is sent.
+     ========================================================= -->
+<script>
+  window.SURVEY_CONFIG = {
+    webhookUrl: "PASTE_YOUR_N8N_WEBHOOK_URL_HERE",
+    contactEmail: "your-email@example.com"
+  };
+</script>
+<style>
+  :root {
+    --palm: #1F4D3A;
+    --palm-deep: #143326;
+    --amber: #E8A317;
+    --amber-soft: #FDF1D6;
+    --ink: #16241D;
+    --muted: #5E6B63;
+    --line: #DCE3DE;
+    --bg: #FFFFFF;
+    --field: #F4F7F5;
+    --error: #B3261E;
+    --radius-option: 14px;
+    --radius-button: 999px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-optical-sizing: auto;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  .app { min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ---------- Intro ---------- */
+  .intro {
+    flex: 1;
+    background: var(--palm);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 150px 20px calc(32px + env(safe-area-inset-bottom));
+    position: relative;
+    overflow: hidden;
+  }
+  .intro::before {
+    /* a single large amber disc: the morning sun over the market */
+    content: "";
+    position: absolute;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: var(--amber);
+    top: -210px; right: -110px;
+    opacity: .95;
+  }
+  .intro-inner { position: relative; max-width: 560px; width: 100%; margin: 0 auto; }
+  .intro h1 {
+    font-size: clamp(44px, 12vw, 76px);
+    line-height: .95;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 20px;
+  }
+  .intro p { margin: 0 0 12px; font-size: 18px; max-width: 32ch; color: #E3EEE8; }
+  .intro .facts { display: flex; gap: 20px; margin: 24px 0 28px; flex-wrap: wrap; }
+  .intro .fact strong { display: block; font-size: 28px; font-weight: 700; color: #fff; line-height: 1.1; }
+  .intro .fact span { font-size: 15px; color: #BFD3C8; }
+  .intro .byline { font-size: 14px; color: #BFD3C8; margin-top: 18px; max-width: 44ch; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    appearance: none; border: 0; cursor: pointer;
+    border-radius: var(--radius-button);
+    padding: 16px 28px;
+    font-weight: 700; font-size: 18px;
+    min-height: 56px;
+    transition: transform .08s ease, background .15s ease;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-start { background: var(--amber); color: var(--palm-deep); width: 100%; }
+  .btn-start:hover { background: #F2B232; }
+  .btn-next { background: var(--palm); color: #fff; flex: 1; }
+  .btn-next:hover { background: var(--palm-deep); }
+  .btn-next:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .btn-back { background: transparent; color: var(--palm); padding: 16px 12px; }
+  .btn-back:hover { text-decoration: underline; }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+
+  /* ---------- Survey screens ---------- */
+  .survey { flex: 1; display: none; flex-direction: column; }
+  .survey.active { display: flex; }
+  .topbar {
+    position: sticky; top: 0; z-index: 2;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(6px);
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner { max-width: 560px; margin: 0 auto; }
+  .progress-text { font-size: 14px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .track { height: 6px; background: var(--field); border-radius: 6px; overflow: hidden; }
+  .bar { height: 100%; width: 0; background: var(--amber); border-radius: 6px; transition: width .3s ease; }
+
+  .stage { flex: 1; padding: 28px 20px 24px; }
+  .stage-inner { max-width: 560px; margin: 0 auto; }
+  .screen { animation: enter .28s ease both; }
+  @keyframes enter { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+  .theme { font-size: 15px; color: var(--palm); font-weight: 500; margin: 0 0 8px; }
+  .q { font-size: clamp(24px, 6.4vw, 32px); line-height: 1.15; font-weight: 700; letter-spacing: -0.015em; margin: 0 0 8px; }
+  .hint { color: var(--muted); font-size: 15px; margin: 0 0 20px; }
+
+  .options { display: grid; gap: 10px; margin-top: 20px; }
+  .option {
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; text-align: left;
+    background: var(--field);
+    border: 2px solid transparent;
+    border-radius: var(--radius-option);
+    padding: 15px 16px;
+    min-height: 58px;
+    cursor: pointer;
+    font-size: 17px;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .option:hover { border-color: var(--line); }
+  .option .mark {
+    flex: none; width: 24px; height: 24px;
+    border: 2px solid var(--muted);
+    background: #fff;
+    display: grid; place-items: center;
+  }
+  .option[data-kind="single"] .mark { border-radius: 50%; }
+  .option[data-kind="multi"] .mark { border-radius: 6px; }
+  .option[aria-checked="true"] { background: var(--amber-soft); border-color: var(--amber); }
+  .option[aria-checked="true"] .mark { border-color: var(--palm); background: var(--palm); }
+  .option[aria-checked="true"] .mark::after { content: ""; width: 8px; height: 8px; background: #fff; border-radius: 50%; }
+  .option[data-kind="multi"][aria-checked="true"] .mark::after {
+    width: 6px; height: 11px; border-radius: 0; background: none;
+    border: solid #fff; border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+
+  label.field { display: block; margin: 18px 0 6px; font-weight: 500; font-size: 16px; }
+  .optional { color: var(--muted); font-weight: 400; }
+  input[type="text"], input[type="tel"], textarea {
+    width: 100%;
+    background: var(--field);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 14px 14px;
+    font-size: 17px;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--palm); background: #fff; }
+  textarea { min-height: 130px; resize: vertical; }
+  .check { display: flex; gap: 12px; align-items: flex-start; margin-top: 16px; cursor: pointer; font-size: 16px; }
+  .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--palm); flex: none; }
+  .privacy { font-size: 14px; color: var(--muted); margin-top: 22px; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .footer {
+    position: sticky; bottom: 0;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  }
+  .footer-inner { max-width: 560px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+  .error { color: var(--error); font-size: 15px; margin-top: 14px; min-height: 1em; }
+
+  /* ---------- Done ---------- */
+  .done { flex: 1; display: none; background: var(--palm); color: #fff; padding: 40px 20px; }
+  .done.active { display: flex; align-items: center; }
+  .done-inner { max-width: 560px; margin: 0 auto; }
+  .done h2 { font-size: clamp(40px, 11vw, 64px); line-height: 1; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 18px; }
+  .done p { color: #E3EEE8; font-size: 18px; max-width: 34ch; }
+  .done .tick {
+    width: 64px; height: 64px; border-radius: 50%; background: var(--amber);
+    display: grid; place-items: center; margin-bottom: 26px;
+  }
+  .done .tick::after {
+    content: ""; width: 14px; height: 26px;
+    border: solid var(--palm-deep); border-width: 0 5px 5px 0;
+    transform: rotate(45deg) translate(-2px, -3px);
+  }
+  .preview-note {
+    background: var(--amber-soft); color: var(--palm-deep);
+    font-size: 14px; padding: 8px 20px; text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .screen { animation: none; }
+    .bar, .btn, .option { transition: none; }
+  }
+  @media (min-width: 720px) {
+    .intro { justify-content: center; padding: 64px 40px; }
+    .intro::before { width: 460px; height: 460px; top: -260px; right: -140px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="preview-note" id="previewNote" hidden>Preview mode: answers are not being sent anywhere yet.</div>
+
+  <!-- Intro -->
+  <section class="intro" id="intro">
+    <div class="intro-inner">
+      <h1>What's slowing your shop down?</h1>
+      <p>I'm talking to African food shop owners across the UK to understand the everyday problems, so I can build tools that actually help.</p>
+      <div class="facts">
+        <div class="fact"><strong>14</strong><span>quick questions</span></div>
+        <div class="fact"><strong>3 min</strong><span>mostly tapping</span></div>
+        <div class="fact"><strong>Free</strong><span>summary of the results</span></div>
+      </div>
+      <button class="btn btn-start" id="startBtn" type="button">Start the survey</button>
+      <p class="byline">By Abiodun, an automation engineer in Scunthorpe. Your answers stay private and are only used for this research.</p>
+    </div>
+  </section>
+
+  <!-- Questions -->
+  <section class="survey" id="survey" aria-live="polite">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="progress-text"><span id="stepText"></span><span id="themeText"></span></div>
+        <div class="track" aria-hidden="true"><div class="bar" id="bar"></div></div>
+      </div>
+    </div>
+    <div class="stage"><div class="stage-inner" id="stage"></div></div>
+    <div class="footer">
+      <div class="footer-inner">
+        <button class="btn btn-back" id="backBtn" type="button">Back</button>
+        <button class="btn btn-next" id="nextBtn" type="button">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Done -->
+  <section class="done" id="done">
+    <div class="done-inner">
+      <div class="tick" aria-hidden="true"></div>
+      <h2>Thank you.</h2>
+      <p id="doneText">Your answers have been sent. They'll help shape something that genuinely works for shops like yours.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUESTIONS = [
+    { id: "q1", theme: "Customers and orders", type: "single",
+      text: "How many calls and WhatsApp enquiries do you get a day?",
+      options: ["0–5", "6–15", "16–30", "More than 30"] },
+    { id: "q2", theme: "Customers and orders", type: "single",
+      text: "How often do you miss them, or reply late because you're busy?",
+      options: ["Rarely", "Sometimes", "Often"] },
+    { id: "q3", theme: "Customers and orders", type: "single",
+      text: "When customers want delivery, what happens now?",
+      options: ["Nobody really asks", "We say no", "We deliver ourselves", "We use a courier", "They order through apps or our website"] },
+    { id: "q4", theme: "Customers and orders", type: "single",
+      text: "Do you take big orders for parties, weddings or church events?",
+      options: ["No", "Yes, sorted out in WhatsApp chats or a notebook", "Yes, with a proper system"] },
+    { id: "q5", theme: "Stock and suppliers", type: "single",
+      text: "How often do popular items run out before you restock?",
+      options: ["Rarely", "About once a month", "Every week"] },
+    { id: "q6", theme: "Stock and suppliers", type: "single",
+      text: "Roughly how much stock do you throw away each month?",
+      hint: "Expired, spoiled or damaged.",
+      options: ["Almost none", "Under £100", "£100–500", "Over £500", "Not sure"] },
+    { id: "q7", theme: "Stock and suppliers", type: "multi",
+      text: "What problems do you have with suppliers?",
+      hint: "Tick all that apply.",
+      options: ["Prices change often", "Late or missing deliveries", "Items not available", "Minimum orders too high", "Poor quality", "No real problems"],
+      exclusive: "No real problems" },
+    { id: "q8", theme: "Loyal customers", type: "single",
+      text: "Do you keep a list of customers' numbers you can message?",
+      options: ["No", "Yes, but we don't really use it", "Yes, and we message them about new stock or offers"] },
+    { id: "q9", theme: "Loyal customers", type: "single",
+      text: "How do you reward your regular customers now?",
+      options: ["We don't", "A discount or extra for people we know", "A proper loyalty card or points scheme"] },
+    { id: "q10", theme: "Loyal customers", type: "single",
+      text: "Would a simple loyalty scheme help bring customers back more often?",
+      hint: "For example, points collected on WhatsApp that turn into a discount.",
+      options: ["Yes", "Maybe", "No"] },
+    { id: "q11", theme: "Running the shop", type: "single",
+      text: "How many hours a week go on admin?",
+      hint: "Ordering, bookkeeping, answering messages.",
+      options: ["Under 2", "2–5", "5–10", "More than 10"] },
+    { id: "q12", theme: "Running the shop", type: "multi", max: 2,
+      text: "Which are your two biggest problems right now?",
+      hint: "Pick up to two.",
+      options: ["Slow replies or missed orders", "No delivery or online sales", "Stock running out", "Wasted stock", "Supplier prices", "Getting customers to come back", "Bookkeeping and admin", "Finding good staff", "Rent and energy costs"] },
+    { id: "q13", theme: "Running the shop", type: "text",
+      text: "If you could fix one thing in your business tomorrow, what would it be?",
+      hint: "A sentence is plenty.", placeholder: "Type your answer" },
+    { id: "q14", theme: "Running the shop", type: "single",
+      text: "If a tool fixed that problem, what monthly cost would feel fair?",
+      options: ["Under £20", "£20–50", "£50–100", "Over £100, if it pays for itself", "I wouldn't pay for it"] },
+    { id: "contact", theme: "Your details", type: "contact",
+      text: "Last step: where should I send the summary?",
+      hint: "All optional. Leave blank to stay anonymous." }
+  ];
+
+  var config = window.SURVEY_CONFIG || {};
+  var isPreview = !config.webhookUrl || config.webhookUrl.indexOf("PASTE_") === 0;
+  var answers = {};
+  var contact = { name: "", shop: "", town: "", phone: "", okToCall: false, wantsSummary: true, website: "" };
+  var index = 0;
+  var sending = false;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var intro = $("intro"), survey = $("survey"), done = $("done");
+  var stage = $("stage"), nextBtn = $("nextBtn"), backBtn = $("backBtn");
+  var stepText = $("stepText"), themeText = $("themeText"), bar = $("bar");
+
+  if (isPreview) { $("previewNote").hidden = false; }
+
+  $("startBtn").addEventListener("click", function () {
+    intro.style.display = "none";
+    survey.classList.add("active");
+    render();
+  });
+
+  backBtn.addEventListener("click", function () {
+    if (index === 0) {
+      survey.classList.remove("active");
+      intro.style.display = "";
+      return;
+    }
+    index--; render();
+  });
+
+  nextBtn.addEventListener("click", goNext);
+
+  function goNext() {
+    var q = QUESTIONS[index];
+    if (!isAnswered(q)) return;
+    if (index < QUESTIONS.length - 1) { index++; render(); }
+    else { submit(); }
+  }
+
+  function isAnswered(q) {
+    if (q.type === "single") return !!answers[q.id];
+    if (q.type === "multi") return Array.isArray(answers[q.id]) && answers[q.id].length > 0;
+    return true; // text and contact are optional
+  }
+
+  function el(tag, attrs, text) {
+    var node = document.createElement(tag);
+    if (attrs) for (var k in attrs) { if (attrs.hasOwnProperty(k)) node.setAttribute(k, attrs[k]); }
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function render() {
+    var q = QUESTIONS[index];
+    var total = QUESTIONS.length - 1; // the contact step isn't counted as a question
+    var isContact = q.type === "contact";
+    stepText.textContent = isContact ? "Nearly done" : "Question " + (index + 1) + " of " + total;
+    themeText.textContent = q.theme;
+    bar.style.width = Math.round((index / QUESTIONS.length) * 100) + "%";
+
+    stage.innerHTML = "";
+    var screen = el("div", { "class": "screen" });
+    var heading = el("h2", { "class": "q", id: "qText", tabindex: "-1" }, q.text);
+    screen.appendChild(heading);
+    if (q.hint) screen.appendChild(el("p", { "class": "hint" }, q.hint));
+
+    if (q.type === "single" || q.type === "multi") renderOptions(q, screen);
+    else if (q.type === "text") renderText(q, screen);
+    else renderContact(screen);
+
+    var err = el("p", { "class": "error", id: "errorText", role: "alert" });
+    screen.appendChild(err);
+    stage.appendChild(screen);
+
+    nextBtn.textContent = isContact ? "Send my answers" : "Next";
+    updateNext();
+    window.scrollTo(0, 0);
+    heading.focus({ preventScroll: true });
+  }
+
+  function renderOptions(q, screen) {
+    var group = el("div", { "class": "options", role: q.type === "single" ? "radiogroup" : "group", "aria-labelledby": "qText" });
+    q.options.forEach(function (label) {
+      var selected = q.type === "single" ? answers[q.id] === label : (answers[q.id] || []).indexOf(label) !== -1;
+      var btn = el("button", {
+        type: "button", "class": "option", "data-kind": q.type,
+        role: q.type === "single" ? "radio" : "checkbox",
+        "aria-checked": selected ? "true" : "false"
+      });
+      btn.appendChild(el("span", { "class": "mark", "aria-hidden": "true" }));
+      btn.appendChild(el("span", null, label));
+      btn.addEventListener("click", function () { choose(q, label); });
+      group.appendChild(btn);
+    });
+    screen.appendChild(group);
+  }
+
+  function choose(q, label) {
+    if (q.type === "single") {
+      answers[q.id] = label;
+      render();
+      // auto-advance after a short pause so the choice is visible
+      setTimeout(function () { if (QUESTIONS[index] === q) goNext(); }, 260);
+      return;
+    }
+    var list = (answers[q.id] || []).slice();
+    var pos = list.indexOf(label);
+    if (pos !== -1) {
+      list.splice(pos, 1);
+    } else {
+      if (q.exclusive) {
+        if (label === q.exclusive) list = [];
+        else list = list.filter(function (x) { return x !== q.exclusive; });
+      }
+      if (q.max && list.length >= q.max) {
+        showError("You can pick up to " + q.max + ". Untick one first.");
+        return;
+      }
+      list.push(label);
+    }
+    answers[q.id] = list;
+    var keep = window.scrollY;
+    render();
+    window.scrollTo(0, keep);
+  }
+
+  function renderText(q, screen) {
+    var ta = el("textarea", { id: "textAnswer", placeholder: q.placeholder || "", "aria-labelledby": "qText", maxlength: "1000" });
+    ta.value = answers[q.id] || "";
+    ta.addEventListener("input", function () { answers[q.id] = ta.value.trim(); });
+    screen.appendChild(ta);
+  }
+
+  function renderContact(screen) {
+    var fields = [
+      { key: "name", label: "Your name", type: "text", auto: "name" },
+      { key: "shop", label: "Shop name", type: "text", auto: "organization" },
+      { key: "town", label: "Town or city", type: "text", auto: "address-level2" },
+      { key: "phone", label: "Phone or WhatsApp", type: "tel", auto: "tel" }
+    ];
+    fields.forEach(function (f) {
+      var lab = el("label", { "class": "field", "for": "f_" + f.key });
+      lab.appendChild(document.createTextNode(f.label + " "));
+      lab.appendChild(el("span", { "class": "optional" }, "(optional)"));
+      var input = el("input", { id: "f_" + f.key, type: f.type, autocomplete: f.auto, maxlength: "120" });
+      input.value = contact[f.key];
+      input.addEventListener("input", function () { contact[f.key] = input.value.trim(); });
+      screen.appendChild(lab);
+      screen.appendChild(input);
+    });
+
+    // honeypot for spam bots: hidden from people
+    var hp = el("div", { "class": "hp", "aria-hidden": "true" });
+    var hpInput = el("input", { type: "text", tabindex: "-1", autocomplete: "off", id: "f_website" });
+    hpInput.addEventListener("input", function () { contact.website = hpInput.value; });
+    hp.appendChild(hpInput);
+    screen.appendChild(hp);
+
+    screen.appendChild(checkbox("okToCall", "You can call me for a 10-minute chat about my answers"));
+    screen.appendChild(checkbox("wantsSummary", "Send me the free summary of what other shop owners said"));
+
+    var privacy = el("p", { "class": "privacy" });
+    privacy.textContent = "Your answers are only used for this research and are never shared or sold. To have them deleted, email " + (config.contactEmail || "me") + ".";
+    screen.appendChild(privacy);
+  }
+
+  function checkbox(key, text) {
+    var lab = el("label", { "class": "check" });
+    var box = el("input", { type: "checkbox" });
+    box.checked = !!contact[key];
+    box.addEventListener("change", function () { contact[key] = box.checked; });
+    lab.appendChild(box);
+    lab.appendChild(el("span", null, text));
+    return lab;
+  }
+
+  function updateNext() {
+    var q = QUESTIONS[index];
+    nextBtn.disabled = !isAnswered(q) || sending;
+  }
+
+  function showError(msg) {
+    var e = $("errorText");
+    if (e) e.textContent = msg;
+  }
+
+  function buildPayload() {
+    var out = { submittedAt: new Date().toISOString(), answers: {}, contact: {} };
+    QUESTIONS.forEach(function (q) {
+      if (q.type === "contact") return;
+      var a = answers[q.id];
+      out.answers[q.id] = { question: q.text, answer: Array.isArray(a) ? a.join("; ") : (a || "") };
+    });
+    out.contact = {
+      name: contact.name, shop: contact.shop, town: contact.town, phone: contact.phone,
+      okToCall: contact.okToCall ? "Yes" : "No",
+      wantsSummary: contact.wantsSummary ? "Yes" : "No"
+    };
+    return out;
+  }
+
+  function finish() {
+    survey.classList.remove("active");
+    done.classList.add("active");
+    if (isPreview) {
+      $("doneText").textContent = "Preview mode: nothing was sent. Add your webhook URL to the settings at the top of this file to go live.";
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function submit() {
+    if (sending) return;
+    if (contact.website) { finish(); return; } // bot filled the honeypot: pretend success
+    var payload = buildPayload();
+
+    if (isPreview) {
+      if (window.console) console.log("Preview payload:", payload);
+      finish();
+      return;
+    }
+
+    sending = true;
+    nextBtn.textContent = "Sending…";
+    updateNext();
+    showError("");
+
+    var controller = ("AbortController" in window) ? new AbortController() : null;
+    var timer = setTimeout(function () { if (controller) controller.abort(); }, 20000);
+
+    fetch(config.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller ? controller.signal : undefined
+    }).then(function (res) {
+      clearTimeout(timer);
+      if (!res.ok) throw new Error("Status " + res.status);
+      finish();
+    }).catch(function () {
+      clearTimeout(timer);
+      sending = false;
+      nextBtn.textContent = "Try sending again";
+      updateNext();
+      showError("Your answers didn't send. Check your internet connection and tap the button again.");
+    });
+  }
+
+  // Enter moves on (except inside the long-answer box)
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || !survey.classList.contains("active")) return;
+    if (e.target && e.target.tagName === "TEXTAREA") return;
+    if (e.target && e.target.classList && e.target.classList.contains("option")) return;
+    if (!nextBtn.disabled) { e.preventDefault(); goNext(); }
+  });
+})();
+</script>
+</body>
+</html>
