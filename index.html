@@ -159,6 +159,9 @@
 
   label.field { display: block; margin: 18px 0 6px; font-weight: 500; font-size: 16px; }
   .optional { color: var(--muted); font-weight: 400; }
+  .required { color: var(--palm); font-weight: 700; }
+  input[type][aria-invalid="true"] { border-color: var(--error); background: #FDF0EF; }
+  .check:first-of-type { margin-top: 4px; }
   input[type="text"], input[type="tel"], textarea {
     width: 100%;
     background: var(--field);
@@ -313,8 +316,8 @@
       text: "If a tool fixed that problem, what monthly cost would feel fair?",
       options: ["Under £20", "£20–50", "£50–100", "Over £100, if it pays for itself", "I wouldn't pay for it"] },
     { id: "contact", theme: "Your details", type: "contact",
-      text: "Last step: where should I send the summary?",
-      hint: "All optional. Leave blank to stay anonymous." }
+      text: "Last step: can I get back to you?",
+      hint: "Tick a box if you'd like a call or the free summary, and add your details so I can reach you. Untick both to stay anonymous." }
   ];
 
   var config = window.SURVEY_CONFIG || {};
@@ -351,6 +354,16 @@
   function goNext() {
     var q = QUESTIONS[index];
     if (!isAnswered(q)) return;
+    if (q.type === "contact") {
+      var missing = missingContact();
+      if (missing.length) {
+        missing.forEach(function (key) { $("f_" + key).setAttribute("aria-invalid", "true"); });
+        showError("To get a call or the summary, add your name, shop name and phone number. Or untick both boxes to stay anonymous.");
+        $("f_" + missing[0]).focus();
+        $("errorText").scrollIntoView({ block: "center" });
+        return;
+      }
+    }
     if (index < QUESTIONS.length - 1) { index++; render(); }
     else { submit(); }
   }
@@ -387,7 +400,9 @@
     else renderContact(screen);
 
     var err = el("p", { "class": "error", id: "errorText", role: "alert" });
-    screen.appendChild(err);
+    var privacyNote = screen.querySelector(".privacy");
+    if (privacyNote) screen.insertBefore(err, privacyNote); // keep the message next to the fields
+    else screen.appendChild(err);
     stage.appendChild(screen);
 
     nextBtn.textContent = isContact ? "Send my answers" : "Next";
@@ -449,20 +464,52 @@
     screen.appendChild(ta);
   }
 
+  // Name, shop and phone are needed only when the owner asks to be contacted
+  var REQUIRED_WHEN_CONTACT = ["name", "shop", "phone"];
+
+  function wantsContact() { return !!(contact.okToCall || contact.wantsSummary); }
+
+  function missingContact() {
+    if (!wantsContact()) return [];
+    return REQUIRED_WHEN_CONTACT.filter(function (key) {
+      if (key === "phone") return (contact.phone || "").replace(/\D/g, "").length < 7;
+      return !contact[key];
+    });
+  }
+
+  function refreshContactLabels() {
+    var need = wantsContact();
+    REQUIRED_WHEN_CONTACT.forEach(function (key) {
+      var tag = $("tag_" + key), input = $("f_" + key);
+      if (!tag || !input) return;
+      tag.textContent = need ? "(required)" : "(optional)";
+      tag.className = need ? "required" : "optional";
+      if (need) input.setAttribute("aria-required", "true");
+      else { input.removeAttribute("aria-required"); input.removeAttribute("aria-invalid"); }
+    });
+    if (!need) showError("");
+  }
+
   function renderContact(screen) {
+    screen.appendChild(checkbox("okToCall", "You can call me for a 10-minute chat about my answers"));
+    screen.appendChild(checkbox("wantsSummary", "Send me the free summary of what other shop owners said"));
+
     var fields = [
       { key: "name", label: "Your name", type: "text", auto: "name" },
       { key: "shop", label: "Shop name", type: "text", auto: "organization" },
-      { key: "town", label: "Town or city", type: "text", auto: "address-level2" },
-      { key: "phone", label: "Phone or WhatsApp", type: "tel", auto: "tel" }
+      { key: "phone", label: "Phone or WhatsApp", type: "tel", auto: "tel" },
+      { key: "town", label: "Town or city", type: "text", auto: "address-level2" }
     ];
     fields.forEach(function (f) {
       var lab = el("label", { "class": "field", "for": "f_" + f.key });
       lab.appendChild(document.createTextNode(f.label + " "));
-      lab.appendChild(el("span", { "class": "optional" }, "(optional)"));
+      lab.appendChild(el("span", { "class": "optional", id: "tag_" + f.key }, "(optional)"));
       var input = el("input", { id: "f_" + f.key, type: f.type, autocomplete: f.auto, maxlength: "120" });
       input.value = contact[f.key];
-      input.addEventListener("input", function () { contact[f.key] = input.value.trim(); });
+      input.addEventListener("input", function () {
+        contact[f.key] = input.value.trim();
+        input.removeAttribute("aria-invalid");
+      });
       screen.appendChild(lab);
       screen.appendChild(input);
     });
@@ -474,8 +521,8 @@
     hp.appendChild(hpInput);
     screen.appendChild(hp);
 
-    screen.appendChild(checkbox("okToCall", "You can call me for a 10-minute chat about my answers"));
-    screen.appendChild(checkbox("wantsSummary", "Send me the free summary of what other shop owners said"));
+    // labels are set once the fields exist
+    setTimeout(refreshContactLabels, 0);
 
     var privacy = el("p", { "class": "privacy" });
     privacy.textContent = "Your answers are only used for this research and are never shared or sold. To have them deleted, email " + (config.contactEmail || "me") + ".";
@@ -486,7 +533,7 @@
     var lab = el("label", { "class": "check" });
     var box = el("input", { type: "checkbox" });
     box.checked = !!contact[key];
-    box.addEventListener("change", function () { contact[key] = box.checked; });
+    box.addEventListener("change", function () { contact[key] = box.checked; refreshContactLabels(); });
     lab.appendChild(box);
     lab.appendChild(el("span", null, text));
     return lab;
